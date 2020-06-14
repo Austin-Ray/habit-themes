@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Habit Themes</string>
+    <string name="theme_placeholder">Theme Placeholder</string>
+    <string name="habit_placeholder">Habit placeholder</string>
 </resources>
