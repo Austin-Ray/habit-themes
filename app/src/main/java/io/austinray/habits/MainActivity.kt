@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.add_theme_habit.*
 import kotlinx.android.synthetic.main.fragment_add_habit.*
+import kotlinx.android.synthetic.main.fragment_add_theme.*
 import kotlinx.android.synthetic.main.habit_layout.view.*
 import kotlinx.android.synthetic.main.theme_layout.view.*
 import java.time.LocalDate
@@ -36,12 +37,14 @@ class MainActivity : AppCompatActivity() {
         model.themes.observe(this, Observer { themes ->
             themeList.layoutManager = LinearLayoutManager(this)
             themeList.adapter = ThemeAdapter(themes.toList(), model as ThemeCallback)
+            (themeList.adapter as ThemeAdapter).notifyDataSetChanged()
 
             val fab = mainAddFab
             fab.setOnClickListener {
                 val dialog = AddHabitThemeDialog(
                     themes.toList(),
-                    model as AddHabitCallback
+                    model as AddHabitCallback,
+                    model as AddThemeCallback
                 )
                 dialog.show(supportFragmentManager, "AddHabitDialog")
             }
@@ -57,7 +60,7 @@ data class Habit(
 
 data class Theme(val name: String, val habits: MutableList<Habit> = mutableListOf())
 
-class ThemeViewModel : ViewModel(), ThemeCallback, AddHabitCallback {
+class ThemeViewModel : ViewModel(), ThemeCallback, AddHabitCallback, AddThemeCallback {
     val themes: MutableLiveData<MutableList<Theme>> = MutableLiveData(SAMPLE_DATA.toMutableList())
 
 
@@ -71,6 +74,14 @@ class ThemeViewModel : ViewModel(), ThemeCallback, AddHabitCallback {
         val targetTheme = themes.value?.find { it == theme }
         val targetHabit = targetTheme?.habits?.find { it == habit }
         targetHabit?.completeDates?.remove(date)
+    }
+
+    override fun addTheme(name: String) {
+        val initValues = themes.value
+        initValues?.let {
+            it.add(Theme(name = name))
+            themes.value = it
+        }
     }
 
     override fun addHabit(name: String, theme: Theme) {
@@ -210,6 +221,10 @@ class HabitAdapter(
 
 }
 
+interface AddThemeCallback {
+    fun addTheme(name: String)
+}
+
 interface AddHabitCallback {
     fun addHabit(name: String, theme: Theme)
 }
@@ -217,6 +232,7 @@ interface AddHabitCallback {
 class AddHabitThemeDialog(
     private val themes: List<Theme>,
     private val habitCallback: AddHabitCallback,
+    private val themeCallback: AddThemeCallback
 ) : DialogFragment() {
 
     override fun onCreateView(
@@ -230,6 +246,14 @@ class AddHabitThemeDialog(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val fragMan = childFragmentManager
         val parentDialog = this.dialog
+        btnTheme.setOnClickListener {
+            fragMan.commit {
+                replace(
+                    R.id.addHabitThemeFragmentHolder,
+                    AddThemeFragment(themeCallback, parentDialog)
+                )
+            }
+        }
         btnHabit.setOnClickListener {
             fragMan.commit {
                 replace(
@@ -239,6 +263,27 @@ class AddHabitThemeDialog(
             }
         }
         btnTheme.performClick()
+    }
+}
+
+class AddThemeFragment(private val callback: AddThemeCallback, private val parentDialog: Dialog?) :
+    Fragment() {
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(R.layout.fragment_add_theme, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        addThemeBtn.setOnClickListener {
+            val newThemeName = addThemeEditText.text.toString()
+            callback.addTheme(newThemeName)
+            parentDialog?.dismiss()
+        }
+        super.onViewCreated(view, savedInstanceState)
     }
 }
 
