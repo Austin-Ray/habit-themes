@@ -1,17 +1,26 @@
 package io.austinray.habits
 
+import android.app.Dialog
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.CheckBox
 import android.widget.TextView
 import androidx.activity.viewModels
+import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.commit
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.add_theme_habit.*
+import kotlinx.android.synthetic.main.fragment_add_habit.*
 import kotlinx.android.synthetic.main.habit_layout.view.*
 import kotlinx.android.synthetic.main.theme_layout.view.*
 import java.time.LocalDate
@@ -24,48 +33,50 @@ class MainActivity : AppCompatActivity() {
 
         val model: ThemeViewModel by viewModels()
 
-        themeList.layoutManager = LinearLayoutManager(this)
-        themeList.adapter = ThemeAdapter(model.themes, model as ThemeCallback)
+        model.themes.observe(this, Observer { themes ->
+            themeList.layoutManager = LinearLayoutManager(this)
+            themeList.adapter = ThemeAdapter(themes.toList(), model as ThemeCallback)
+
+            val fab = mainAddFab
+            fab.setOnClickListener {
+                val dialog = AddHabitThemeDialog(
+                    themes.toList(),
+                    model as AddHabitCallback
+                )
+                dialog.show(supportFragmentManager, "AddHabitDialog")
+            }
+        })
     }
 }
 
 data class Habit(
     val name: String,
     val createDate: LocalDate,
-    val completeDates: MutableList<LocalDate>
+    val completeDates: MutableList<LocalDate> = mutableListOf()
 )
 
-data class Theme(val name: String, val habits: List<Habit>)
+data class Theme(val name: String, val habits: MutableList<Habit> = mutableListOf())
 
-class ThemeViewModel : ViewModel(), ThemeCallback {
-    val themes: List<Theme> = SAMPLE_DATA
+class ThemeViewModel : ViewModel(), ThemeCallback, AddHabitCallback {
+    val themes: MutableLiveData<MutableList<Theme>> = MutableLiveData(SAMPLE_DATA.toMutableList())
 
 
     override fun addDate(theme: Theme, habit: Habit, date: LocalDate) {
-        val targetTheme = themes.find { it == theme }
-        if (targetTheme != null) {
-            println("Theme Found!")
-        }
+        val targetTheme = themes.value?.find { it == theme }
         val targetHabit = targetTheme?.habits?.find { it == habit }
-        if (targetHabit != null) {
-            println("Habit Found! ${targetHabit.name}")
-        }
         targetHabit?.completeDates?.add(date)
-        println(targetHabit?.completeDates)
     }
 
     override fun removeDate(theme: Theme, habit: Habit, date: LocalDate) {
-        val targetTheme = themes.find { it == theme }
-        if (targetTheme != null) {
-            println("Theme Found!")
-        }
+        val targetTheme = themes.value?.find { it == theme }
         val targetHabit = targetTheme?.habits?.find { it == habit }
-        if (targetHabit != null) {
-            println("Habit Looking for ${habit.name}")
-            println("Habit Found! ${targetHabit.name}")
-        }
         targetHabit?.completeDates?.remove(date)
-        println(targetHabit?.completeDates)
+    }
+
+    override fun addHabit(name: String, theme: Theme) {
+        val newHabit = Habit(name, LocalDate.now())
+        val foundTheme = themes.value?.find { it == theme }
+        foundTheme?.habits?.add(newHabit)
     }
 }
 
@@ -181,7 +192,6 @@ class HabitAdapter(
 
         holder.habitNameEditText.text = habit.name
         holder.dateCheckBoxMap.forEach { (date, checkbox) ->
-            println(date)
             checkbox.isChecked = habit.completeDates.contains(date)
             checkbox.setOnCheckedChangeListener { _, isChecked ->
                 if (isChecked) {
@@ -198,4 +208,68 @@ class HabitAdapter(
         this.notifyDataSetChanged()
     }
 
+}
+
+interface AddHabitCallback {
+    fun addHabit(name: String, theme: Theme)
+}
+
+class AddHabitThemeDialog(
+    private val themes: List<Theme>,
+    private val habitCallback: AddHabitCallback,
+) : DialogFragment() {
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(R.layout.add_theme_habit, container)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        val fragMan = childFragmentManager
+        val parentDialog = this.dialog
+        btnHabit.setOnClickListener {
+            fragMan.commit {
+                replace(
+                    R.id.addHabitThemeFragmentHolder,
+                    AddHabitFragment(themes, habitCallback, parentDialog)
+                )
+            }
+        }
+        btnTheme.performClick()
+    }
+}
+
+class AddHabitFragment(
+    private val themes: List<Theme>,
+    private val callback: AddHabitCallback,
+    private val parentDialog: Dialog?
+) :
+    Fragment() {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(R.layout.fragment_add_habit, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        val themeNames = themes.map { it.name }.toList()
+        themeSpinner.adapter = ArrayAdapter(
+            requireContext(),
+            R.layout.support_simple_spinner_dropdown_item,
+            themeNames
+        )
+
+        habitAdd.setOnClickListener {
+            val selected = themeSpinner.selectedItemPosition
+            callback.addHabit(habitEditText.text.toString(), themes[selected])
+            parentDialog?.dismiss()
+        }
+
+        super.onViewCreated(view, savedInstanceState)
+    }
 }

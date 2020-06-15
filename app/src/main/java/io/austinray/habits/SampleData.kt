@@ -7,7 +7,7 @@ val today: LocalDate = LocalDate.now()
 val SAMPLE_DATA = listOf(
     Theme(
         name = "Physical Health",
-        habits = listOf(
+        habits = mutableListOf(
             Habit(
                 name = "Drink 1 gallon water",
                 createDate = today.minusDays(6),
@@ -31,7 +31,7 @@ val SAMPLE_DATA = listOf(
     ),
     Theme(
         name = "Mental Health",
-        habits = listOf(
+        habits = mutableListOf(
             Habit(
                 name = "Meditate",
                 createDate = today.minusDays(6),
