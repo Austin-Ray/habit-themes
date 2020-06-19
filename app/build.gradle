@@ -3,6 +3,7 @@ plugins {
     id 'kotlin-android'
     id 'kotlin-android-extensions'
     id 'kotlin-kapt'
+    id 'io.gitlab.arturbosch.detekt' version '1.10.0-RC1'
 }
 
 
