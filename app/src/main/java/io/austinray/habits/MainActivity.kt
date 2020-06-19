@@ -1,5 +1,6 @@
 package io.austinray.habits
 
+import android.app.Application
 import android.app.Dialog
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -13,17 +14,18 @@ import androidx.activity.viewModels
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.*
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.room.*
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.add_theme_habit.*
 import kotlinx.android.synthetic.main.fragment_add_habit.*
 import kotlinx.android.synthetic.main.fragment_add_theme.*
 import kotlinx.android.synthetic.main.habit_layout.view.*
 import kotlinx.android.synthetic.main.theme_layout.view.*
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 class MainActivity : AppCompatActivity() {
@@ -37,7 +39,6 @@ class MainActivity : AppCompatActivity() {
         model.themes.observe(this, Observer { themes ->
             themeList.layoutManager = LinearLayoutManager(this)
             themeList.adapter = ThemeAdapter(themes.toList(), model as ThemeCallback)
-            (themeList.adapter as ThemeAdapter).notifyDataSetChanged()
 
             val fab = mainAddFab
             fab.setOnClickListener {
@@ -58,36 +59,63 @@ data class Habit(
     val completeDates: MutableList<LocalDate> = mutableListOf()
 )
 
-data class Theme(val name: String, val habits: MutableList<Habit> = mutableListOf())
+data class Theme(
+    val name: String,
+    val habits: MutableList<Habit> = mutableListOf()
+)
 
-class ThemeViewModel : ViewModel(), ThemeCallback, AddHabitCallback, AddThemeCallback {
-    val themes: MutableLiveData<MutableList<Theme>> = MutableLiveData(SAMPLE_DATA.toMutableList())
+class ThemeViewModel(application: Application) : AndroidViewModel(application), ThemeCallback,
+    AddHabitCallback, AddThemeCallback {
+    private val db =
+        Room.databaseBuilder(this.getApplication(), ThemeDatabase::class.java, "theme-database")
+            .build()
 
+    private var _themes: MutableLiveData<List<Theme>> = MutableLiveData()
 
-    override fun addDate(theme: Theme, habit: Habit, date: LocalDate) {
-        val targetTheme = themes.value?.find { it == theme }
-        val targetHabit = targetTheme?.habits?.find { it == habit }
-        targetHabit?.completeDates?.add(date)
-    }
+    val themes: LiveData<List<Theme>>
+        get() = _themes
 
-    override fun removeDate(theme: Theme, habit: Habit, date: LocalDate) {
-        val targetTheme = themes.value?.find { it == theme }
-        val targetHabit = targetTheme?.habits?.find { it == habit }
-        targetHabit?.completeDates?.remove(date)
-    }
+    init {
+        db.themeDao().getAllThemeHabits().observeForever { themes ->
+            val newThemes = themes.map { theme ->
+                val habits = theme.habits.map { habitJoin ->
+                    Habit(
+                        habitJoin.habit.habitName,
+                        habitJoin.habit.createDate,
+                        habitJoin.dates.map { dataSchema -> dataSchema.date }.toMutableList()
+                    )
+                }
+                Theme(theme.theme.themeName, habits.toMutableList())
+            }
 
-    override fun addTheme(name: String) {
-        val initValues = themes.value
-        initValues?.let {
-            it.add(Theme(name = name))
-            themes.value = it
+            _themes.value = newThemes
         }
     }
 
+    override fun removeTheme(theme: Theme) {
+        GlobalScope.launch { db.themeDao().removeTheme(theme) }
+    }
+
+    override fun removeHabit(habit: Habit, theme: Theme) {
+        GlobalScope.launch { db.themeDao().removeHabit(habit, theme) }
+    }
+
+    override fun addDate(theme: Theme, habit: Habit, date: LocalDate) {
+        GlobalScope.launch { db.themeDao().addDate(habit, date) }
+    }
+
+    override fun removeDate(theme: Theme, habit: Habit, date: LocalDate) {
+        GlobalScope.launch { db.themeDao().removeDate(habit, date) }
+    }
+
+    override fun addTheme(name: String) {
+        val newTheme = Theme(name)
+        GlobalScope.launch { db.themeDao().addTheme(newTheme) }
+    }
+
     override fun addHabit(name: String, theme: Theme) {
-        val newHabit = Habit(name, LocalDate.now())
-        val foundTheme = themes.value?.find { it == theme }
-        foundTheme?.habits?.add(newHabit)
+        val newHabit = Habit(name = name, createDate = LocalDate.now())
+        GlobalScope.launch { db.themeDao().addHabit(newHabit, theme) }
     }
 }
 
@@ -105,8 +133,16 @@ class ThemeViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
     fun configureView(theme: Theme) {
         themeEditText.text = theme.name
+        themeEditText.setOnLongClickListener {
+            callback?.removeTheme(theme)
+            true
+        }
         (habitList.adapter as HabitAdapter).updateDataSet(theme.habits)
         (habitList.adapter as HabitAdapter).callback = object : HabitCallback {
+            override fun removeHabit(habit: Habit) {
+                callback?.removeHabit(habit, theme)
+            }
+
             override fun addDate(habit: Habit, date: LocalDate) {
                 callback?.addDate(theme, habit, date)
             }
@@ -124,6 +160,8 @@ class ThemeViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 }
 
 interface ThemeCallback {
+    fun removeTheme(theme: Theme)
+    fun removeHabit(habit: Habit, theme: Theme)
     fun addDate(theme: Theme, habit: Habit, date: LocalDate)
     fun removeDate(theme: Theme, habit: Habit, date: LocalDate)
 }
@@ -147,6 +185,7 @@ class ThemeAdapter(private var themes: List<Theme>, private val themeCallback: T
 }
 
 interface HabitCallback {
+    fun removeHabit(habit: Habit)
     fun addDate(habit: Habit, date: LocalDate)
     fun removeDate(habit: Habit, date: LocalDate)
 }
@@ -211,6 +250,10 @@ class HabitAdapter(
                     callback?.removeDate(habit, date)
                 }
             }
+        }
+        holder.habitNameEditText.setOnLongClickListener {
+            callback?.removeHabit(habit)
+            true
         }
     }
 
