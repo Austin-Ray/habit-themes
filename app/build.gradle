@@ -5,6 +5,7 @@ plugins {
     id 'kotlin-kapt'
     id 'io.gitlab.arturbosch.detekt' version '1.10.0-RC1'
     id "com.diffplug.gradle.spotless" version "4.3.1"
+    id "com.vanniktech.android.junit.jacoco" version "0.16.0"
 }
 
 
@@ -20,6 +21,9 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
+        debug {
+            testCoverageEnabled = true
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
@@ -100,4 +104,9 @@ spotless {
         target '*.gradle.kts', 'additionalScripts/*.gradle.kts'
         ktlint()
     }
+}
+
+junitJacoco {
+    jacocoVersion = '0.8.5'
+    includeNoLocationClasses = false
 }
