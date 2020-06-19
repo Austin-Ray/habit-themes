@@ -14,10 +14,13 @@ import androidx.activity.viewModels
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
-import androidx.lifecycle.*
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.room.*
+import androidx.room.Room
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.add_theme_habit.*
 import kotlinx.android.synthetic.main.fragment_add_habit.*
@@ -93,29 +96,29 @@ class ThemeViewModel(application: Application) : AndroidViewModel(application), 
     }
 
     override fun removeTheme(theme: Theme) {
-        GlobalScope.launch { db.themeDao().removeTheme(theme) }
+        GlobalScope.launch { db.removeTheme(theme) }
     }
 
     override fun removeHabit(habit: Habit, theme: Theme) {
-        GlobalScope.launch { db.themeDao().removeHabit(habit, theme) }
+        GlobalScope.launch { db.removeHabit(habit, theme) }
     }
 
     override fun addDate(theme: Theme, habit: Habit, date: LocalDate) {
-        GlobalScope.launch { db.themeDao().addDate(habit, date) }
+        GlobalScope.launch { db.addDate(habit, date) }
     }
 
     override fun removeDate(theme: Theme, habit: Habit, date: LocalDate) {
-        GlobalScope.launch { db.themeDao().removeDate(habit, date) }
+        GlobalScope.launch { db.removeDate(habit, date) }
     }
 
     override fun addTheme(name: String) {
         val newTheme = Theme(name)
-        GlobalScope.launch { db.themeDao().addTheme(newTheme) }
+        GlobalScope.launch { db.addTheme(newTheme) }
     }
 
     override fun addHabit(name: String, theme: Theme) {
         val newHabit = Habit(name = name, createDate = LocalDate.now())
-        GlobalScope.launch { db.themeDao().addHabit(newHabit, theme) }
+        GlobalScope.launch { db.addHabit(newHabit, theme) }
     }
 }
 

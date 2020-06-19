@@ -1,8 +1,19 @@
 package io.austinray.habits
 
 import androidx.lifecycle.LiveData
-import androidx.room.*
-import androidx.room.ForeignKey.CASCADE
+import androidx.room.Dao
+import androidx.room.Database
+import androidx.room.Delete
+import androidx.room.Embedded
+import androidx.room.Entity
+import androidx.room.Insert
+import androidx.room.PrimaryKey
+import androidx.room.Query
+import androidx.room.Relation
+import androidx.room.RoomDatabase
+import androidx.room.Transaction
+import androidx.room.TypeConverter
+import androidx.room.TypeConverters
 import java.time.LocalDate
 
 @Database(
@@ -12,35 +23,10 @@ import java.time.LocalDate
 @TypeConverters(Converters::class)
 abstract class ThemeDatabase : RoomDatabase() {
     abstract fun themeDao(): ThemeDao
-}
-
-@Dao
-abstract class ThemeDao {
-    @Transaction
-    @Query("SELECT * FROM themes")
-    abstract fun getAllThemeHabits(): LiveData<List<ThemeHabitJoin>>
-
-    @Insert
-    abstract fun addTheme(theme: ThemeSchema)
-
-    @Insert
-    abstract fun addHabit(habit: HabitSchema)
-
-    @Insert
-    abstract fun addCompleteDate(completeDateSchema: CompleteDateSchema)
-
-    @Delete
-    abstract fun deleteTheme(theme: ThemeSchema)
-
-    @Delete
-    abstract fun deleteHabit(habit: HabitSchema)
-
-    @Delete
-    abstract fun deleteCompleteDate(completeDateSchema: CompleteDateSchema)
 
     fun addHabit(habit: Habit, theme: Theme) {
         val habitSchema = HabitSchema(habit.name, theme.name, habit.createDate)
-        addHabit(habitSchema)
+        themeDao().addHabit(habitSchema)
 
         habit.completeDates
             .asSequence()
@@ -50,7 +36,7 @@ abstract class ThemeDao {
 
     fun addTheme(theme: Theme) {
         val themeSchema = ThemeSchema(theme.name)
-        addTheme(themeSchema)
+        themeDao().addTheme(themeSchema)
 
         theme.habits.forEach { habit ->
             addHabit(habit, theme)
@@ -59,25 +45,50 @@ abstract class ThemeDao {
 
     fun addDate(habit: Habit, date: LocalDate) {
         val completeDateSchema = CompleteDateSchema(habit.name, date)
-        addCompleteDate(completeDateSchema)
+        themeDao().addCompleteDate(completeDateSchema)
     }
 
     fun removeDate(habit: Habit, date: LocalDate) {
         val completeDateSchema = CompleteDateSchema(habit.name, date)
-        deleteCompleteDate(completeDateSchema)
+        themeDao().deleteCompleteDate(completeDateSchema)
     }
 
     fun removeHabit(habit: Habit, theme: Theme) {
         val habitSchema = HabitSchema(habit.name, theme.name, habit.createDate)
         habit.completeDates.forEach { date -> removeDate(habit, date) }
-        deleteHabit(habitSchema)
+        themeDao().deleteHabit(habitSchema)
     }
 
     fun removeTheme(theme: Theme) {
         val themeSchema = ThemeSchema(theme.name)
         theme.habits.forEach { removeHabit(it, theme) }
-        deleteTheme(themeSchema)
+        themeDao().deleteTheme(themeSchema)
     }
+}
+
+@Dao
+interface ThemeDao {
+    @Transaction
+    @Query("SELECT * FROM themes")
+    fun getAllThemeHabits(): LiveData<List<ThemeHabitJoin>>
+
+    @Insert
+    fun addTheme(theme: ThemeSchema)
+
+    @Insert
+    fun addHabit(habit: HabitSchema)
+
+    @Insert
+    fun addCompleteDate(completeDateSchema: CompleteDateSchema)
+
+    @Delete
+    fun deleteTheme(theme: ThemeSchema)
+
+    @Delete
+    fun deleteHabit(habit: HabitSchema)
+
+    @Delete
+    fun deleteCompleteDate(completeDateSchema: CompleteDateSchema)
 }
 
 @Entity(tableName = "themes")
