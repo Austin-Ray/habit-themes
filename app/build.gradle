@@ -4,6 +4,7 @@ plugins {
     id 'kotlin-android-extensions'
     id 'kotlin-kapt'
     id 'io.gitlab.arturbosch.detekt' version '1.10.0-RC1'
+    id "com.diffplug.gradle.spotless" version "4.3.1"
 }
 
 
@@ -89,4 +90,14 @@ dependencies {
     implementation "androidx.room:room-ktx:$room_version"
 
     testImplementation "androidx.room:room-testing:$room_version"
+}
+
+spotless {
+    kotlin {
+        ktlint()
+    }
+    kotlinGradle {
+        target '*.gradle.kts', 'additionalScripts/*.gradle.kts'
+        ktlint()
+    }
 }
