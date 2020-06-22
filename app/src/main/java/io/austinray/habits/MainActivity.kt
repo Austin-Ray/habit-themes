@@ -1,8 +1,23 @@
+/*
+ *  This file is part of Habit Themes.
+ * 
+ *  Habit Themes is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ * 
+ *  Habit Themes is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ * 
+ *  You should have received a copy of the GNU General Public License
+ *  along with Habit Themes. If not, see <https://www.gnu.org/licenses/>.
+ */
 package io.austinray.habits
 
 import android.app.Application
 import android.app.Dialog
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,6 +26,7 @@ import android.widget.ArrayAdapter
 import android.widget.CheckBox
 import android.widget.TextView
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
@@ -21,6 +37,7 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
+import java.time.LocalDate
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.add_theme_habit.*
 import kotlinx.android.synthetic.main.fragment_add_habit.*
@@ -29,7 +46,6 @@ import kotlinx.android.synthetic.main.habit_layout.view.*
 import kotlinx.android.synthetic.main.theme_layout.view.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 
 class MainActivity : AppCompatActivity() {
 
@@ -153,7 +169,6 @@ class ThemeViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             override fun removeDate(habit: Habit, date: LocalDate) {
                 callback?.removeDate(theme, habit, date)
             }
-
         }
     }
 
@@ -264,7 +279,6 @@ class HabitAdapter(
         this.habits = habits
         this.notifyDataSetChanged()
     }
-
 }
 
 interface AddThemeCallback {

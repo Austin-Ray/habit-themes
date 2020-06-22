@@ -99,6 +99,7 @@ dependencies {
 spotless {
     kotlin {
         ktlint()
+        licenseHeaderFile "$project.rootDir/docs/license/LICENSE.header"
     }
     kotlinGradle {
         target '*.gradle.kts', 'additionalScripts/*.gradle.kts'
