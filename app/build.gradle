@@ -99,6 +99,7 @@ dependencies {
 spotless {
     kotlin {
         ktlint()
+        target "**/*.kt"
         licenseHeaderFile "$project.rootDir/docs/license/LICENSE.header"
     }
     kotlinGradle {
