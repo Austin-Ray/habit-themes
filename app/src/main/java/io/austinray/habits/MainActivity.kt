@@ -27,6 +27,7 @@ import android.widget.CheckBox
 import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
@@ -38,6 +39,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.add_theme_habit.*
 import kotlinx.android.synthetic.main.fragment_add_habit.*
@@ -142,12 +144,27 @@ class ThemeViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
     private val themeEditText = view.themeNameText
     private val habitList = view.habitList
+    private val datesConstraint = view.datesConstraint
 
     private var callback: ThemeCallback? = null
+
+    private val dateFormatter = DateTimeFormatter.ofPattern("M/dd")
 
     init {
         habitList.layoutManager = LinearLayoutManager(view.context)
         habitList.adapter = HabitAdapter()
+
+        var date = LocalDate.now()
+
+        view.date0.text = date.format(dateFormatter)
+        date = date.minusDays(1)
+        view.date1.text = date.format(dateFormatter)
+        date = date.minusDays(1)
+        view.date2.text = date.format(dateFormatter)
+        date = date.minusDays(1)
+        view.date3.text = date.format(dateFormatter)
+        date = date.minusDays(1)
+        view.date4.text = date.format(dateFormatter)
     }
 
     fun configureView(theme: Theme) {
@@ -169,6 +186,10 @@ class ThemeViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             override fun removeDate(habit: Habit, date: LocalDate) {
                 callback?.removeDate(theme, habit, date)
             }
+        }
+
+        if (theme.habits.isEmpty()) {
+            datesConstraint.isVisible = false
         }
     }
 
@@ -212,11 +233,11 @@ class HabitViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
     val habitNameEditText: TextView = view.habitNameText
 
-    private val habitDateCheckBox1 = view.habitDateCheckBox1
-    private val habitDateCheckBox2 = view.habitDateCheckBox2
-    private val habitDateCheckBox3 = view.habitDateCheckBox3
-    private val habitDateCheckBox4 = view.habitDateCheckBox4
-    private val habitDateCheckBox5 = view.habitDateCheckBox5
+    private val habitDateCheckBox1 = view.habitDateCheckBox0
+    private val habitDateCheckBox2 = view.habitDateCheckBox1
+    private val habitDateCheckBox3 = view.habitDateCheckBox2
+    private val habitDateCheckBox4 = view.habitDateCheckBox3
+    private val habitDateCheckBox5 = view.habitDateCheckBox4
 
     val dateCheckBoxMap: Map<LocalDate, CheckBox>
 
