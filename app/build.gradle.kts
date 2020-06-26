@@ -8,7 +8,6 @@ plugins {
     id("com.vanniktech.android.junit.jacoco") version "0.16.0"
 }
 
-
 android {
     compileSdkVersion(29)
     buildToolsVersion("29.0.3")
