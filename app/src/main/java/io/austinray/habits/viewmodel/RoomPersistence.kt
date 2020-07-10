@@ -14,7 +14,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with Habit Themes. If not, see <https://www.gnu.org/licenses/>.
  */
-package io.austinray.habits
+package io.austinray.habits.viewmodel
 
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
@@ -30,6 +30,8 @@ import androidx.room.RoomDatabase
 import androidx.room.Transaction
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
+import io.austinray.habits.model.Habit
+import io.austinray.habits.model.Theme
 import java.time.LocalDate
 
 @Database(
@@ -41,7 +43,8 @@ abstract class ThemeDatabase : RoomDatabase() {
     abstract fun themeDao(): ThemeDao
 
     fun addHabit(habit: Habit, theme: Theme) {
-        val habitSchema = HabitSchema(habit.name, theme.name, habit.createDate)
+        val habitSchema =
+            HabitSchema(habit.name, theme.name, habit.createDate)
         themeDao().addHabit(habitSchema)
 
         habit.completeDates
@@ -69,7 +72,8 @@ abstract class ThemeDatabase : RoomDatabase() {
     }
 
     fun removeHabit(habit: Habit, theme: Theme) {
-        val habitSchema = HabitSchema(habit.name, theme.name, habit.createDate)
+        val habitSchema =
+            HabitSchema(habit.name, theme.name, habit.createDate)
         habit.completeDates.forEach { date -> removeDate(habit, date) }
         themeDao().deleteHabit(habitSchema)
     }
