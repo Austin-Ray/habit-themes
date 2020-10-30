@@ -35,6 +35,6 @@ class ThemeViewModelFactory(
         modelClass: Class<T>,
         handle: SavedStateHandle
     ): T {
-        return ThemeViewModel(repo, app) as T
+        return modelClass.cast(ThemeViewModel(repo, app))!!
     }
 }
