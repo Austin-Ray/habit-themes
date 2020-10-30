@@ -23,12 +23,20 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ApplicationComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
+import io.austinray.habits.data.HabitThemeRepo
+import io.austinray.habits.data.RoomHabitThemeRepo
 import io.austinray.habits.viewmodel.ThemeDatabase
 import javax.inject.Singleton
 
 @InstallIn(ApplicationComponent::class)
 @Module
 class DataModule {
+
+    @Provides
+    @Singleton
+    fun provideHabitThemeRepo(themeDatabase: ThemeDatabase): HabitThemeRepo {
+        return RoomHabitThemeRepo(themeDatabase)
+    }
 
     @Provides
     @Singleton
