@@ -14,27 +14,10 @@
  *  You should have received a copy of the GNU General Public License
  *  along with Habit Themes. If not, see <https://www.gnu.org/licenses/>.
  */
-package io.austinray.habits.viewmodel
+package io.austinray.habits
 
 import android.app.Application
-import android.os.Bundle
-import androidx.lifecycle.AbstractSavedStateViewModelFactory
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.savedstate.SavedStateRegistryOwner
-import io.austinray.habits.data.HabitThemeRepo
+import dagger.hilt.android.HiltAndroidApp
 
-class ThemeViewModelFactory(
-    owner: SavedStateRegistryOwner,
-    private val repo: HabitThemeRepo,
-    private val app: Application,
-    defaultArgs: Bundle? = null
-) : AbstractSavedStateViewModelFactory(owner, defaultArgs) {
-    override fun <T : ViewModel?> create(
-        key: String,
-        modelClass: Class<T>,
-        handle: SavedStateHandle
-    ): T {
-        return modelClass.cast(ThemeViewModel(repo, app))!!
-    }
-}
+@HiltAndroidApp
+class HabitApp : Application()

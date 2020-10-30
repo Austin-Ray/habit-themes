@@ -21,26 +21,19 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
-import io.austinray.habits.data.newInstance
+import dagger.hilt.android.AndroidEntryPoint
 import io.austinray.habits.view.AddHabitThemeDialog
 import io.austinray.habits.view.ThemeAdapter
 import io.austinray.habits.viewmodel.AddHabitCallback
 import io.austinray.habits.viewmodel.AddThemeCallback
 import io.austinray.habits.viewmodel.ThemeCallback
 import io.austinray.habits.viewmodel.ThemeViewModel
-import io.austinray.habits.viewmodel.ThemeViewModelFactory
 import kotlinx.android.synthetic.main.activity_main.*
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
-    val model: ThemeViewModel by viewModels {
-        ThemeViewModelFactory(
-            this,
-            newInstance(this.application),
-            this.application,
-            intent.extras
-        )
-    }
+    val model: ThemeViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
