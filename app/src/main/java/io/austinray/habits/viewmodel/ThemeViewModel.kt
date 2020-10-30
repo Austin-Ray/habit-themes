@@ -16,44 +16,46 @@
  */
 package io.austinray.habits.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.hilt.Assisted
+import androidx.hilt.lifecycle.ViewModelInject
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
 import io.austinray.habits.data.HabitThemeRepo
 import io.austinray.habits.model.Habit
 import io.austinray.habits.model.Theme
 import java.time.LocalDate
 
-class ThemeViewModel(
-    private val repo: HabitThemeRepo,
-    application: Application
+class ThemeViewModel @ViewModelInject constructor(
+    private val habitThemeRepo: HabitThemeRepo,
+    @Assisted private val savedStateHandle: SavedStateHandle
 ) :
-    AndroidViewModel(application), ThemeCallback,
+    ViewModel(), ThemeCallback,
     AddHabitCallback, AddThemeCallback {
 
-    val themes: LiveData<List<Theme>> = repo.getAllThemeHabits()
+    val themes: LiveData<List<Theme>> = habitThemeRepo.getAllThemeHabits()
 
     override fun removeTheme(theme: Theme) {
-        repo.removeTheme(theme)
+        habitThemeRepo.removeTheme(theme)
     }
 
     override fun removeHabit(habit: Habit, theme: Theme) {
-        repo.removeHabit(habit, theme)
+        habitThemeRepo.removeHabit(habit, theme)
     }
 
     override fun addDate(theme: Theme, habit: Habit, date: LocalDate) {
-        repo.addDate(theme, habit, date)
+        habitThemeRepo.addDate(theme, habit, date)
     }
 
     override fun removeDate(theme: Theme, habit: Habit, date: LocalDate) {
-        repo.removeDate(theme, habit, date)
+        habitThemeRepo.removeDate(theme, habit, date)
     }
 
     override fun addTheme(name: String) {
-        repo.addTheme(name)
+        habitThemeRepo.addTheme(name)
     }
 
     override fun addHabit(name: String, theme: Theme) {
-        repo.addHabit(name, theme)
+        habitThemeRepo.addHabit(name, theme)
     }
 }
