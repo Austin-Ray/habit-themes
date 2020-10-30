@@ -6,6 +6,7 @@ plugins {
     id("io.gitlab.arturbosch.detekt") version "1.10.0-RC1"
     id("com.diffplug.gradle.spotless") version "4.3.1"
     id("com.vanniktech.android.junit.jacoco") version "0.16.0"
+    id("dagger.hilt.android.plugin")
 }
 
 android {
@@ -96,6 +97,9 @@ dependencies {
     implementation("androidx.room:room-ktx:$room_version")
 
     testImplementation("androidx.room:room-testing:$room_version")
+
+    implementation("com.google.dagger:hilt-android:2.28-alpha")
+    kapt("com.google.dagger:hilt-android-compiler:2.28-alpha")
 }
 
 spotless {

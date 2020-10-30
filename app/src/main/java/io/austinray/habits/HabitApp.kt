@@ -14,16 +14,10 @@
  *  You should have received a copy of the GNU General Public License
  *  along with Habit Themes. If not, see <https://www.gnu.org/licenses/>.
  */
-package io.austinray.habits.data
+package io.austinray.habits
 
 import android.app.Application
-import androidx.room.Room
-import io.austinray.habits.viewmodel.ThemeDatabase
+import dagger.hilt.android.HiltAndroidApp
 
-fun newInstance(app: Application): HabitThemeRepo {
-    val db =
-        Room.databaseBuilder(app, ThemeDatabase::class.java, "theme-database")
-            .build()
-
-    return RoomHabitThemeRepo(db)
-}
+@HiltAndroidApp
+class HabitApp : Application()
