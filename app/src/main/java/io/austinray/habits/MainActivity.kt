@@ -21,26 +21,30 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
+import io.austinray.habits.data.newInstance
 import io.austinray.habits.view.AddHabitThemeDialog
 import io.austinray.habits.view.ThemeAdapter
 import io.austinray.habits.viewmodel.AddHabitCallback
 import io.austinray.habits.viewmodel.AddThemeCallback
 import io.austinray.habits.viewmodel.ThemeCallback
 import io.austinray.habits.viewmodel.ThemeViewModel
+import io.austinray.habits.viewmodel.ThemeViewModelFactory
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.add_theme_habit.*
-import kotlinx.android.synthetic.main.fragment_add_habit.*
-import kotlinx.android.synthetic.main.fragment_add_theme.*
-import kotlinx.android.synthetic.main.habit_layout.view.*
-import kotlinx.android.synthetic.main.theme_layout.view.*
 
 class MainActivity : AppCompatActivity() {
+
+    val model: ThemeViewModel by viewModels {
+        ThemeViewModelFactory(
+            this,
+            newInstance(this.application),
+            this.application,
+            intent.extras
+        )
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        val model: ThemeViewModel by viewModels()
 
         model.themes.observe(this, Observer { themes ->
             themeList.layoutManager = LinearLayoutManager(this)
