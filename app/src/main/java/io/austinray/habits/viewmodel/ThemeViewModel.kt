@@ -19,65 +19,41 @@ package io.austinray.habits.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.room.Room
+import io.austinray.habits.data.HabitThemeRepo
 import io.austinray.habits.model.Habit
 import io.austinray.habits.model.Theme
 import java.time.LocalDate
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 
-class ThemeViewModel(application: Application) : AndroidViewModel(application), ThemeCallback,
+class ThemeViewModel(
+    private val repo: HabitThemeRepo,
+    application: Application
+) :
+    AndroidViewModel(application), ThemeCallback,
     AddHabitCallback, AddThemeCallback {
-    private val db =
-        Room.databaseBuilder(this.getApplication(), ThemeDatabase::class.java, "theme-database")
-            .build()
 
-    private var _themes: MutableLiveData<List<Theme>> = MutableLiveData()
-
-    val themes: LiveData<List<Theme>>
-        get() = _themes
-
-    init {
-        db.themeDao().getAllThemeHabits().observeForever { themes ->
-            val newThemes = themes.map { theme ->
-                val habits = theme.habits.map { habitJoin ->
-                    Habit(
-                        habitJoin.habit.habitName,
-                        habitJoin.habit.createDate,
-                        habitJoin.dates.map { dataSchema -> dataSchema.date }.toMutableList()
-                    )
-                }
-                Theme(theme.theme.themeName, habits.toMutableList())
-            }
-
-            _themes.value = newThemes
-        }
-    }
+    val themes: LiveData<List<Theme>> = repo.getAllThemeHabits()
 
     override fun removeTheme(theme: Theme) {
-        GlobalScope.launch { db.removeTheme(theme) }
+        repo.removeTheme(theme)
     }
 
     override fun removeHabit(habit: Habit, theme: Theme) {
-        GlobalScope.launch { db.removeHabit(habit, theme) }
+        repo.removeHabit(habit, theme)
     }
 
     override fun addDate(theme: Theme, habit: Habit, date: LocalDate) {
-        GlobalScope.launch { db.addDate(habit, date) }
+        repo.addDate(theme, habit, date)
     }
 
     override fun removeDate(theme: Theme, habit: Habit, date: LocalDate) {
-        GlobalScope.launch { db.removeDate(habit, date) }
+        repo.removeDate(theme, habit, date)
     }
 
     override fun addTheme(name: String) {
-        val newTheme = Theme(name)
-        GlobalScope.launch { db.addTheme(newTheme) }
+        repo.addTheme(name)
     }
 
     override fun addHabit(name: String, theme: Theme) {
-        val newHabit = Habit(name = name, createDate = LocalDate.now())
-        GlobalScope.launch { db.addHabit(newHabit, theme) }
+        repo.addHabit(name, theme)
     }
 }
